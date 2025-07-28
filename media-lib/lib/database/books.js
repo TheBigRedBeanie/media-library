@@ -1,4 +1,4 @@
-
+// function to get all books from user's library
 export async function getUserBooks(supabase, userID) {
     try {
         const { data, error } = await supabase
@@ -36,6 +36,7 @@ export async function getUserBooks(supabase, userID) {
     }
 }
 
+//function to get a single book from the logged in user's library based on book ID
 export async function getUserBookByID(supabase, userId, libraryId) {
     try {
         const {data, error} = await supabase

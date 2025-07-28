@@ -2,12 +2,26 @@
 import MediaCard from '../../components/MediaCard'
 import Link from 'next/link'
 import { useState } from 'react'
+import { getUserBooks } from '../../lib/database/books'
+import { supabase } from '@/lib/supabaseClient';
 
 export default function LibraryPage() {
+// pulling from supabase to fill in the Book card to start
+const currentUserID = 'd9becd19-b343-4711-97a5-3779765508cc'
+const loadUserBooks = async () => {
+  const result = await getUserBooks(supabase, currentUserID);
+  if (result.success) {
+    setBOoks(result.books);
+  } else {
+    console.error('Failed to load books:', result.error);
+  }
+}
+
+console.log('book data', loadUserBooks.books)
   // Dummy data for now (this will be connected to Supabase later)
   const mediaItems = [
     { id: 1, title: 'Inception', type: 'Movies', url: 'https://placehold.co/300x200' },
-    { id: 2, title: '1984', type: 'Books', url: 'https://placehold.co/300x200' },
+    { id: loadUserBooks.id, title: loadUserBooks.books, type: 'Books', url: 'https://placehold.co/300x200' },
     { id: 3, title: 'Assasins Creed', type: 'Games', url: 'https://placehold.co/300x200' },
     { id: 4, title: 'Ok Coders Hack the AI', type: 'Movies', url: 'https://placehold.co/300x200' },
     { id: 5, title: 'Song', type: 'Songs', url: 'https://placehold.co/300x200' },

@@ -11,7 +11,7 @@ const currentUserID = 'd9becd19-b343-4711-97a5-3779765508cc' // this is jm's UUI
 const loadUserBooks = async () => {
   const result = await getUserBooks(supabase, currentUserID);
   if (result.success) {
-    setBOoks(result.books);
+    setBooks(result.books);   //BOoks to Books figiliev
   } else {
     console.error('Failed to load books:', result.error);
   }

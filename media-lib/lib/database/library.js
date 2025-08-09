@@ -21,13 +21,51 @@ export default async function getUserLibrary(supabase, libraryID) {
             mediaType: library.media_type,
             DateAdded: library.date_added
         }));
+
     return {success: true, library}
     } catch (err) {
-        console.error('unexpected error:', error)
+        console.error('unexpected error:', err)
         return { success: false, error: 'unepected error occurred' };
     }
 }
 
+
+export async function checkForDuplicates(supabase, mediaType, title, format, creator) {
+    try {
+        console.log('🔍 Searching for duplicates:', { title: title.trim(), creator: creator.trim(), format: format.trim() });
+        const { data, error } = await supabase
+        .from('media') 
+        .select('media_id, title, format, creator')
+        .ilike('title', title.trim())
+        .ilike('format', format.trim())
+        .ilike('creator', creator.trim())
+        .ilike('media_type', mediaType.trim());
+
+        if (error) {
+            console.error('error checking for dupes', error);
+            return { success: false, error: error.message };
+        }
+    
+        console.log('📊 Found similar items:', data);
+
+        const exactMatch = data.find(item => 
+        item.title.toLowerCase().trim() === title.toLowerCase().trim() && 
+        item.creator.toLowerCase().trim() === creator.toLowerCase().trim() &&
+        item.format.toLowerCase().trim() === format.toLowerCase().trim() &&
+        item.mediaType?.toLowerCase().trim() === mediaType.toLowerCase().trim()
+    );
+
+    return {
+        success: true,
+        isDuplicate: !!exactMatch,
+        existingItem: exactMatch || null,
+        similarItems: data
+    };
+} catch (err) {
+    console.error('unexpected error checking dupes', err);
+    return { success: false, error: 'unexpected error occurred' };
+}
+}
 
 export async function addMediaToLibrary( supabase, userId, mediaData) {
     const { title, creator, mediaType, releaseDate, description, format} = mediaData;
@@ -35,73 +73,52 @@ export async function addMediaToLibrary( supabase, userId, mediaData) {
     try{ 
 
         const validMediaTypes = ['book', 'film', 'music'];
-        if (!validMediaTyptes.includes(mediaType)) {
+        if (!validMediaTypes.includes(mediaType)) {
             return {success: false, error: `invalid media type: ${mediaType}` };
         }
 
+        console.log('checking for dupes');
+        const duplicateCheck = await checkForDuplicates(supabase, mediaType, title, format, creator);
+
+        console.log('🔍 Duplicate check result:', duplicateCheck);
+
+        if (!duplicateCheck.success) {
+            console.error('❌ Duplicate check failed:', duplicateCheck.error);
+            return {success: false, error: `error checking dupes: ${duplicateCheck.error}`}
+        }
+
+        if (duplicateCheck.isDuplicate) {
+            console.log('🚫 Duplicate detected, blocking insertion');
+            return {
+                success: false,
+                error: `duplicate found "${title} by ${creator} in ${format} format already exists`,
+                isDuplicate: true,
+                existingItem: duplicateCheck.existingItem
+            };
+        }
+
+        console.log('✅ No duplicates found, proceeding with insertion');
+
         let mediaRecord;
-        let tableName;
+        let tableName = 'media';
 
-        if (mediaType === 'book') {
-            tableName = 'books';
-            const { data, error } = await supabase
-            .from('books')
-            .insert({
-                title: title,
-                creator: creator,
-                media_type: mediaType,
-                release_date: releaseDate,
-                desc: description,
-                format: format
-            })
-            .select()
-            .single();
-
-            if (error) {
-                console.error('error creating book', error);
-                return { success: false, error: error.message };
-            }
-
-            mediaRecord = data;
-        } else if (mediaType === 'film') {
-            tableName = 'film';
+        if (validMediaTypes.includes(mediaType)) {
             const { data, error } = await supabase 
-            .from('film')
+            .from(tableName)
             .insert({
-                title: title,
-                creator: creator,
+                title: title.trim(),
+                creator: creator.trim(),
                 media_type: mediaType,
                 release_date: releaseDate,
-                desc: description,
-                format: format
+                desc: description ? description.trim() : null,
+                format: format.trim()
             })
             .select()
             .single();
 
             if (error) {
-                console.error('error creating film', error);
-                return {success: false, error: error.message };
-            }
-
-            mediaRecord = data;
-        } else if (mediaType === 'music') {
-            tableName = 'music';
-            const { data, error } = await supabase
-            .from('film')
-            .insert({
-                title: title,
-                creator: creator,
-                media_type: mediaType,
-                release_date: releaseDate,
-                desc: description,
-                format: format
-            })
-            .select()
-            .single();
-
-            if (error) {
-                console.error('error creating music', error);
-                return {success: false, error: error.message };
+                console.error(`error creating ${mediaType}`, error);
+                return { success: false, error: error.message };
             }
 
             mediaRecord = data;
@@ -112,9 +129,9 @@ export async function addMediaToLibrary( supabase, userId, mediaData) {
         const { data: libraryEntry, error: libraryError } = await supabase
         .from('library')
         .insert({
-            user_id: userId,
+            library_id: userId,
             media_type: mediaType,
-            media_id: mediaRecord.id,
+            media_id: mediaRecord.media_id,
         })
         .select()
         .single();

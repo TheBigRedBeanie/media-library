@@ -1,5 +1,5 @@
 'use client';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import getUser from "../../lib/database/users"
 import getUserLibrary, {addMediaToLibrary} from "@/lib/database/library";
 import getUserMedia, {getUserMediaByID} from "@/lib/database/media";
@@ -17,6 +17,14 @@ export default function DatabaseTest() {
   const [userIdNum, setUserIdNum] = useState('');
   const [libraryData, setLibraryData] = useState('');
   const [mediaData, setMediaData] = useState('');
+  const [formData, setFormData] = useState({
+    title: '',
+    creator: '',
+    mediaType: '',
+    releaseDate: '',
+    description: '',
+    format: ''
+  });
   const username = 'thebigredbeanie';
 
   console.log('database test started');
@@ -31,10 +39,11 @@ export default function DatabaseTest() {
       const result = await getUser(supabase, username);
 
       if (result.success) {
-      setUserIdNum(result.user[0].userID)
-      setLibraryID(userIdNum)
-      console.log('get user result', userIdNum)
-      console.log('libraryid', libraryID)
+      const userId = result.user[0].userID;
+      setUserIdNum(userId)
+      setLibraryID(userId)
+      console.log('get user result', userId)
+      console.log('libraryid', userId)
       } else {
         setError(result.error);
         console.error('error with function', error);
@@ -56,7 +65,7 @@ export default function DatabaseTest() {
     try {
       const result = await getUserLibrary(supabase, libraryID);
 
-      if (result.success) {
+      if (result.success && result.library) {
         setLibraryData(result.library)
         console.log('get library result', libraryData)
   
@@ -100,21 +109,105 @@ export default function DatabaseTest() {
     }
   }
 
+  useEffect(() => {
+    if (userIdNum) {
+      testGetUserLibrary();
+    }
+  }, [userIdNum]);
 
-  const testAddMediaToLibrary = async () => {
-    setLoading(true);
-    setError('');
-    console.log('starting media add');
+  useEffect(() => {
+    if (libraryData && libraryData.length > 0) {
+      testGetUserMedia();
+    }
+  }, [libraryData]);
 
-    setMediaData({title, creator, releaseDate, description, format});
+
+const testAddMediaToLibrary = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError('');
+  console.log('starting media add');
+
+  console.log('form data:', formData);
+  console.log('user id', userIdNum);
+
+  if (!formData.title || !formData.creator || !formData.mediaType || !formData.format) {
+    setError('title, creator, media type, and format are required');
+    setLoading(false);
+    return;
+  }
 
     try {
-      const result = await addMediaToLibrary(supabase, userIdNum, mediaData) 
+      const result = await addMediaToLibrary(supabase, userIdNum, formData);
+      console.log('add media result', result);
+      
+      if (result.success) {
+        console.log('media added successfully');
+
+        setFormData({
+          title: '',
+          creator: '',
+          mediaType: '',
+          releaseDate: '',
+          description: '',
+          format: ''
+        });
+
+        testGetUserLibrary();
+      }
+      
+      else {
+        setError(result.error);
+        console.error('database error', error.error);
+      }
     } catch (err) {
       console.error('unexpected error:', err);
       setError('unexpected error' + err.message);
-  } 
-  }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const signUp = async () => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    if (data.user) {
+      await supabase.from("users").insert([
+        { id: data.user.id, username: email.split("@")[0] }
+      ]);
+    }
+
+    alert("Check your email for a confirmation link!");
+  };
+
+  const signIn = async () => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) alert(error.message);
+    else alert("Signed in!");
+  };
 
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
@@ -138,53 +231,123 @@ export default function DatabaseTest() {
             <button
       className='btn'
       onClick={testGetUserMedia}>get user media</button>
-      <form className='form' id='mediaForm'>
-        <label for="title">title</label>
+
+      <form className='form' id='mediaForm' onSubmit={testAddMediaToLibrary}>
+        <label htmlFor="title">title</label>
         <input 
         className='input'
         type='text'
         id='title'
         name='title'
+        value={formData.title}
+        onChange={handleInputChange}
         ></input>
-        <label for='creator'>creator</label>
+        <label htmlFor='creator'>creator</label>
         <input
         className='input'
         type='text'
         id='creator'
         name='creator'
+        value={formData.creator}
+        onChange={handleInputChange}
         ></input>
-        <label for='mediaType'>media type</label>
-        <input 
+        <label htmlFor='mediaType'>media type</label>
+        <select 
         className='input'
-        type='text'
         id='mediaType'
         name='mediaType'
-        ></input>
-        <label for='releaseDate'>release date</label>
+        value={formData.mediaType}
+        onChange={handleInputChange}
+        >
+          <option value=''>select media type</option>
+          <option value='book'>Book</option>
+          <option value='film'>Film</option>
+          <option value='music'>Music</option>
+        </select>
+        <label htmlFor='releaseDate'>release date</label>
         <input
         className='input'
         type='date'
         id='releaseDate'
         name='releaseDate'
+        value={formData.releaseDate}
+        onChange={handleInputChange}
         ></input>
-        <label for='description'>description</label>
+        <label htmlFor='description'>description</label>
         <input
         className='input'
         type='text'
         id='description'
         name='description'
+        value={formData.description}
+        onChange={handleInputChange}
         ></input>
-                <label for='format'>format</label>
+                <label htmlFor='format'>format</label>
         <input
         className='input'
         type='text'
         id='format'
         name='format'
+        value={formData.format}
+        onChange={handleInputChange}
         ></input>
         <button
+        type='submit'
         className='btn'
-        onClick={testAddMediaToLibrary}>submit</button>
+        disabled={loading}>{loading ? 'adding...' : 'Submit'}</button>
       </form>
+      <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} /><br />
+      <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} /><br />
+      <button onClick={signUp}>Sign Up</button>
+      <button onClick={signIn}>Sign In</button>
     </div>
+
+    
   )
+}
+
+
+
+export function AuthPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const signUp = async () => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    if (data.user) {
+      await supabase.from("users").insert([
+        { id: data.user.id, username: email.split("@")[0] }
+      ]);
+    }
+
+    alert("Check your email for a confirmation link!");
+  };
+
+  const signIn = async () => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) alert(error.message);
+    else alert("Signed in!");
+  };
+
+  return (
+    <div style={{ padding: 20 }}>
+      <h2>Supabase Auth</h2>
+      <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} /><br />
+      <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} /><br />
+      <button onClick={signUp}>Sign Up</button>
+      <button onClick={signIn}>Sign In</button>
+    </div>
+  );
 }

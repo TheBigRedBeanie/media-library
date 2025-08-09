@@ -1,11 +1,8 @@
 import '../styles/globals.css'
 import Sidebar from '../components/Sidebar'
 import Navbar from '../components/Navbar'
+import { AuthProvider } from '@/lib/context/AuthContext'
 
-export const metadata = {
-  title: 'Media Library',
-  description: 'A Next.js media library app',
-}
 
 export default function RootLayout({ children }) {
   return (
@@ -17,7 +14,9 @@ export default function RootLayout({ children }) {
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
           <Navbar />
-          <main className="p-6 overflow-y-auto">{children}</main>
+          <main className="p-6 overflow-y-auto">
+            <AuthProvider>{children}</AuthProvider>
+          </main>
         </div>
       </body>
     </html>

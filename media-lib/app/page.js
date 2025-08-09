@@ -24,10 +24,15 @@ export default function HomePage() {
     e.preventDefault();
     setSubmitting(true)
     setMessage("");
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { data,error } = await supabase.auth.signUp({ email, password });
     setSubmitting(false);
     if (error) setMessage(error.message);
     else setMessage("Check your email to confirm your account.");
+    if (data.user) {
+      await supabase.from("users").insert([
+        { id: data.user.id, username: email.split("@")[0] }
+      ]);
+    }
   };
 
   const handleEmailLogin = async (e) => {

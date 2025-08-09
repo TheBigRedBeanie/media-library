@@ -2,9 +2,7 @@
 import { useState } from "react";
 import getUser from "../../lib/database/users"
 import getUserLibrary from "@/lib/database/library";
-import getUserBooks, {getUserBookByID} from "@/lib/database/books";
-import getUserFilm, {getUserFilmByID} from "@/lib/database/film";
-import getUserMusic, {getUserMusicByID} from "@/lib/database/music";
+import getUserMedia, {getUserMediaByID} from "@/lib/database/media";
 import { supabase } from "@/lib/supabaseClient";
 
 
@@ -16,8 +14,9 @@ export default function DatabaseTest() {
   const [libraryID, setLibraryID] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [userID, setUserID] = useState('');
-  const [librarydata, setLibraryData] = useState('');
+  const [userIdNum, setUserIdNum] = useState('');
+  const [libraryData, setLibraryData] = useState('');
+  const [mediaData, setMediaData] = useState('');
   const username = 'thebigredbeanie';
 
   console.log('database test started');
@@ -32,9 +31,10 @@ export default function DatabaseTest() {
       const result = await getUser(supabase, username);
 
       if (result.success) {
-      setUserID(result.user)
-      setLibraryID(result.library)
-      console.log('get user result', result)
+      setUserIdNum(result.user[0].userID)
+      setLibraryID(userIdNum)
+      console.log('get user result', userIdNum)
+      console.log('libraryid', libraryID)
       } else {
         setError(result.error);
         console.error('error with function', error);
@@ -58,7 +58,7 @@ export default function DatabaseTest() {
 
       if (result.success) {
         setLibraryData(result.library)
-        console.log('get library resul', library)
+        console.log('get library result', libraryData)
   
 
       } else {
@@ -72,6 +72,32 @@ export default function DatabaseTest() {
       setLoading(false);
     }
 
+  }
+
+
+  const testGetUserMedia = async () => {
+    setLoading(true);
+    setError('');
+    console.log('getting user media');
+
+    try { 
+      const result = await getUserMedia(supabase, libraryData);
+
+      if (result.success) {
+        setMediaData(result.media)
+        console.log('get media result', mediaData)
+
+      } else {
+        setError(result.error);
+        console.error('error with the get media', error);
+      }
+
+    } catch (err) {
+      console.error('unexpected error:', err);
+      setError('unexpected error' + err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -93,6 +119,9 @@ export default function DatabaseTest() {
       <button
       className='btn'
       onClick={testGetUserLibrary}>get user library</button>
+            <button
+      className='btn'
+      onClick={testGetUserMedia}>get user media</button>
     </div>
   )
 }

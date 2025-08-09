@@ -3,14 +3,14 @@
 export default async function getUser(supabase, username) {
     try {
         const {data, error} = await supabase
-            from('users')
+            .from('users')
             .select('id, username, full_name, created_at')
             .eq('username', username);
 
         console.log('username + userID:', data[0].username, '+', data[0].id )
 
         if (error) {
-         console.error('error fetching user:', error);
+        console.error('error fetching user:', error);
             return {success: false, error: error.message };
         }
 

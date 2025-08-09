@@ -15,13 +15,13 @@ export default async function getUserLibrary(supabase, libraryID) {
             return {success: false, error: error.message };
         }
 
-        const libraryData = data.map(libraryData => ({
-            libraryID: libraryData.id,
-            mediaID: libraryData.media_id,
-            mediaType: libraryData.media_type,
-            DateAdded: libraryData.date_added
+        const library = data.map(library => ({
+            libraryID: library.library_id,
+            mediaID: library.media_id,
+            mediaType: library.media_type,
+            DateAdded: library.date_added
         }));
-    return {success: true, libraryData}
+    return {success: true, library}
     } catch (err) {
         console.error('unexpected error:', error)
         return { success: false, error: 'unepected error occurred' };

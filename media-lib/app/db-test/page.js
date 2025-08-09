@@ -1,7 +1,7 @@
 'use client';
 import { useState } from "react";
 import getUser from "../../lib/database/users"
-import getUserLibrary from "@/lib/database/library";
+import getUserLibrary, {addMediaToLibrary} from "@/lib/database/library";
 import getUserMedia, {getUserMediaByID} from "@/lib/database/media";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -100,6 +100,22 @@ export default function DatabaseTest() {
     }
   }
 
+
+  const testAddMediaToLibrary = async () => {
+    setLoading(true);
+    setError('');
+    console.log('starting media add');
+
+    setMediaData({title, creator, releaseDate, description, format});
+
+    try {
+      const result = await addMediaToLibrary(supabase, userIdNum, mediaData) 
+    } catch (err) {
+      console.error('unexpected error:', err);
+      setError('unexpected error' + err.message);
+  } 
+  }
+
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <h1>testing username</h1>
@@ -122,6 +138,53 @@ export default function DatabaseTest() {
             <button
       className='btn'
       onClick={testGetUserMedia}>get user media</button>
+      <form className='form' id='mediaForm'>
+        <label for="title">title</label>
+        <input 
+        className='input'
+        type='text'
+        id='title'
+        name='title'
+        ></input>
+        <label for='creator'>creator</label>
+        <input
+        className='input'
+        type='text'
+        id='creator'
+        name='creator'
+        ></input>
+        <label for='mediaType'>media type</label>
+        <input 
+        className='input'
+        type='text'
+        id='mediaType'
+        name='mediaType'
+        ></input>
+        <label for='releaseDate'>release date</label>
+        <input
+        className='input'
+        type='date'
+        id='releaseDate'
+        name='releaseDate'
+        ></input>
+        <label for='description'>description</label>
+        <input
+        className='input'
+        type='text'
+        id='description'
+        name='description'
+        ></input>
+                <label for='format'>format</label>
+        <input
+        className='input'
+        type='text'
+        id='format'
+        name='format'
+        ></input>
+        <button
+        className='btn'
+        onClick={testAddMediaToLibrary}>submit</button>
+      </form>
     </div>
   )
 }

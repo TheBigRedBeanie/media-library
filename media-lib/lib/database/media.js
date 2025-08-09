@@ -7,8 +7,11 @@ export default async function getUserMedia(supabase, libraryData) {
 
     try {
 
-        const mediaIds = libraryData.map(item => item.media_id);
+        const mediaIds = libraryData.map(item => item.mediaID);
         console.log('searching media IDs', mediaIds);
+        console.log('Input libraryData:', libraryData);
+        console.log('libraryData type:', typeof libraryData);
+        console.log('Is array?', Array.isArray(libraryData));
 
         const {data, error} = await supabase
         .from('media')
@@ -39,10 +42,4 @@ export default async function getUserMedia(supabase, libraryData) {
         console.error('unexpected error:', err)
         return { success: false, error: 'unexpected error occurred' };
     }
-}
-
-
-export async function getUserMediaByID() {
-
-    
 }

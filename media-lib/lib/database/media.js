@@ -2,7 +2,7 @@ export default async function getUserMedia(supabase, libraryData) {
 
 //in theory, libraryData will be an array of media_id from the library table captured in a previous function
 
-
+// build a unique index on the media table 
 
 
     try {

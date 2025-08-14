@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import getUser from "../../lib/database/users"
-import getUserLibrary, {addMediaToLibrary} from "@/lib/database/library";
+import getUserLibrary, {addMediaToLibrary, deleteMediaFromLibrary} from "@/lib/database/library";
 import getUserMedia, {getUserMediaByID} from "@/lib/database/media";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -25,6 +25,9 @@ export default function DatabaseTest() {
     description: '',
     format: ''
   });
+  const [libLoaded, setLibLoaded] = useState(false);
+  const [mediaIdNum, setMediaIdNum] = useState('');
+
   const username = 'thebigredbeanie';
 
   console.log('database test started');
@@ -67,6 +70,7 @@ export default function DatabaseTest() {
 
       if (result.success && result.library) {
         setLibraryData(result.library)
+        setLibLoaded(true)
         console.log('get library result', libraryData)
   
 
@@ -158,7 +162,7 @@ const testAddMediaToLibrary = async (e) => {
       
       else {
         setError(result.error);
-        console.error('database error', error.error);
+        console.error('database error', result.error);
       }
     } catch (err) {
       console.error('unexpected error:', err);
@@ -176,6 +180,32 @@ const testAddMediaToLibrary = async (e) => {
     }));
   };
 
+
+  const testDeleteMediaFromLibrary = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    console.log('deleting media:', mediaIdNum)
+
+    try {
+      const result = await deleteMediaFromLibrary(supabase, userIdNum, mediaIdNum)
+      console.log('page message: deleting media id:', mediaIdNum)
+      if (result.success) {
+        console.log('media deleted!', mediaIdNum)
+        setMediaIdNum('');
+
+        testGetUserLibrary();
+
+      } else {
+            setError(result.error);
+            console.error('database error', result.error);
+    } 
+  } catch (err) {
+    console.error('unexpected error' + err.message);
+  } finally {
+    setLoading(false);
+  }
+}
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -208,6 +238,7 @@ const testAddMediaToLibrary = async (e) => {
     if (error) alert(error.message);
     else alert("Signed in!");
   };
+  
 
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
@@ -296,6 +327,31 @@ const testAddMediaToLibrary = async (e) => {
         className='btn'
         disabled={loading}>{loading ? 'adding...' : 'Submit'}</button>
       </form>
+      <br></br>
+      <br></br>
+
+      <h2>testing delete</h2>
+      <div>
+        <form
+        className='form'
+        id='deleteForm'
+        onSubmit={testDeleteMediaFromLibrary}>
+        <input 
+        className='input'
+        id='mediaId'
+        name='mediaId'
+        value={mediaIdNum}
+        placeholder='enter media id to delete'
+        onChange={(e) => setMediaIdNum(e.target.value)}></input>
+        <button
+        className='btn'
+        type='submit'
+        disabled={loading}>{loading ? 'deleting...' : 'delete'}</button>
+        </form>
+      
+      
+      </div>
+      <br></br><br></br>
       <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} /><br />
       <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} /><br />
       <button onClick={signUp}>Sign Up</button>

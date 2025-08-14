@@ -1,7 +1,10 @@
 "use client";
 import MediaCard from '../../components/MediaCard'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
+import { useAuth } from "../../lib/context/AuthContext";
+import { useRouter } from "next/navigation";
+
 
 export default function LibraryPage() {
 // pulling from supabase to fill in the Book card to start
@@ -29,6 +32,15 @@ console.log('book data', loadUserBooks.books)
 // State for filter and view
 const [filter, setFilter] = useState('All')
 const [view, setView] = useState('grid') // grid or list view
+const { session } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+    if (!session) {
+      router.push("/");
+    }
+  }, [session, router]);
+ 
+
 
 // Filter logic
 const filteredItems = filter === 'All'

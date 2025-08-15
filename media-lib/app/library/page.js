@@ -5,9 +5,11 @@ import { useState,useEffect,useMemo } from 'react'
 import { getAccessToken } from "../../lib/getAccessToken";
 import { useAuth } from "../../lib/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { deleteMediaFromLibrary } from '@/lib/database/library';
+import { supabase } from '@/lib/supabaseClient';
 
-const FILTERS = ["All", "Books", "Movies", "Songs", "Games"];
-const mapFilterToDb = { Books: "Book", Movies: "Movie", Songs: "Song", Games: "Game" };
+const FILTERS = ["All", "Books", "Movies", "Music", "Games"];
+const mapFilterToDb = { Books: "book", Movies: "film", Music: "music", Games: "game'"};
 
 
 export default function LibraryPage() {
@@ -18,12 +20,16 @@ export default function LibraryPage() {
   const [filter, setFilter] = useState("All");
   const [view, setView] = useState("grid");
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState('');
+  const [deleteConfirmation, setDeleteConfirmation] = useState({ show: false, mediaId: null, title: ''})
   
   // Require auth
   useEffect(() => {
-    if (!session) router.push("/");
+    if (!session) {router.push("/")};
+    setUserId(session.user.id);
   }, [session, router]);
 
+  console.log('user id', userId);
   // Load items for this user
   useEffect(() => {
     let cancelled = false;
@@ -44,6 +50,35 @@ export default function LibraryPage() {
     const dbType = mapFilterToDb[filter] || filter;
     return items.filter(i => i.media_type === dbType);
   }, [items, filter]);
+
+// function for loading the delete modal to the user 
+const showDeleteConfirmation = (mediaId, title) => {
+  setDeleteConfirmation({ show: true, mediaId, title })
+}
+
+const confirmDelete = async () => {
+  const { mediaId } = deleteConfirmation
+
+  try {
+    const result = await deleteMediaFromLibrary(supabase, userId, mediaId)
+
+    if (result.success) {
+      setItems(prev => prev.filter(item => item.mediaID !== mediaId))
+      console.log('sucessfully removed media:', mediaId)
+    } else {
+      console.error('delete failed:', result.error)
+    }
+  } catch (error) {
+    console.error('error:', error)
+  }
+
+  setDeleteConfirmation({ show: false, mediaId: null, title: ''})
+}
+
+const cancelDelete = () => {
+  setDeleteConfirmation({ show: false, mediaId: null, title: ''})
+}
+
 
   return (
     <div className="space-y-10">
@@ -83,26 +118,53 @@ export default function LibraryPage() {
               key={item.media_id}
               title={item.title}
               type={item.media_type}
-              image={"https://placehold.co/300x200"}
+              image={`/logos/${item.media_type}.logo.png`}
+              mediaId={item.media_id}
+              showDelete={true}
+              onDelete={showDeleteConfirmation}
             />
           ))}
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="table w-full">
-            <thead><tr><th>Title</th><th>Type</th><th>Added</th></tr></thead>
+            <thead><tr><th>Title</th><th>Creator</th><th>Type</th><th>Added</th><th>Remove</th></tr></thead>
             <tbody>
               {filtered.map(item => (
                 <tr key={item.media_id}>
                   <td>{item.title}</td>
+                  <td>{item.creator}</td>
                   <td>{item.media_type}</td>
                   <td>{new Date(item.created_at || item.date_added).toLocaleDateString()}</td>
+                  <td><button 
+                  className='btn btn-sm border-warning'
+                  onClick={() => showDeleteConfirmation(item.media_id, item.title)}
+                  >X</button></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+{deleteConfirmation.show && (
+      <div className="modal modal-open">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">Confirm Removal</h3>
+          <p className="py-4">
+            Are you sure you want to remove "{deleteConfirmation.title}" from your library?
+          </p>
+          <div className="modal-action">
+            <button className="btn btn-ghost" onClick={cancelDelete}>
+              Cancel
+            </button>
+            <button className="btn btn-error" onClick={confirmDelete}>
+              Remove
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 }

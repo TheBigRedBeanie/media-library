@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
+import { supabase } from "../../../lib/supabaseClient"
 
 export async function GET(req) {
   const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   if (!token) return NextResponse.json({ error: "Missing token" }, { status: 401 });
 
-  const { data: userData, error: userErr } = await supabaseAdmin.auth.getUser(token);
+  const { data: userData, error: userErr } = await supabase.auth.getUser(token);
   if (userErr || !userData?.user) {
     return NextResponse.json({ error: "Invalid token" }, { status: 401 });
   }
   const userId = userData.user.id;
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await supabase
     .from("library")
     .select(`
       date_added,

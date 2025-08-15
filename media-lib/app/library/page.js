@@ -5,6 +5,41 @@ import { useState,useEffect,useMemo } from 'react'
 import { getAccessToken } from "../../lib/getAccessToken";
 import { useAuth } from "../../lib/context/AuthContext";
 import { useRouter } from "next/navigation";
+import getUserLibrary from '@/lib/database/library';
+
+export default function LibraryPage() {
+const [libraryData, setLibraryData] = useState('');
+// pulling from supabase to fill in the Book card to start
+const currentUserID = 'd9becd19-b343-4711-97a5-3779765508cc' // this is jm's UUID from the Users table in supabase
+const loadUserBooks = async () => {
+  const result = await getUserLibrary(supabase, userId);
+  if (!success) {
+    console.error('failed to read books:', result.error);
+    return {success: false, error: result.error}
+  }
+
+  console.log('raw library data', result.library);
+  return (result.library);
+}
+
+console.log('loadUserBooks result', loadUserBooks.result);
+//setLibraryData(loadUserBooks.result.library)
+
+  // Dummy data for now (this will be connected to Supabase later)
+  const mediaItems = [
+    { id: 1, title: 'Inception', type: 'Movies', url: 'https://placehold.co/300x200' },
+    { id: 2, title: '1984', type: 'Books', url: 'https://placehold.co/300x200' },
+    { id: 3, title: 'Assasins Creed', type: 'Games', url: 'https://placehold.co/300x200' },
+    { id: 4, title: 'Ok Coders Hack the AI', type: 'Movies', url: 'https://placehold.co/300x200' },
+    { id: 5, title: 'Song', type: 'Songs', url: 'https://placehold.co/300x200' },
+  ]
+
+
+// State for filter and view
+const [filter, setFilter] = useState('All')
+const [view, setView] = useState('grid') // grid or list view
+const { session } = useAuth();
+const [userId, setUserId] = useState('');
 
 const FILTERS = ["All", "Books", "Movies", "Songs", "Games"];
 const mapFilterToDb = { Books: "Book", Movies: "Movie", Songs: "Song", Games: "Game" };
@@ -21,6 +56,18 @@ export default function LibraryPage() {
   
   // Require auth
   useEffect(() => {
+    if (!session) {
+      router.push("/");
+    } else if (session.user?.id) {
+      setUserId(session.user.id); // added userId config to the useEffect
+    }
+  }, [session, router]);
+
+  console.log('userId:', userId);
+// Filter logic
+const filteredItems = filter === 'All'
+  ? mediaItems
+  : mediaItems.filter(item => item.type === filter)
     if (!session) router.push("/");
   }, [session, router]);
 

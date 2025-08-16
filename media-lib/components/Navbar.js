@@ -10,7 +10,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [session, setSession] = useState(null);
   const [searchQuery, setSearchQuery] = useState(''); // the search state
-  const [mediaType, setMediaType] = useState('MEDIA_TYPES.BOOK');
+  const [mediaType, setMediaType] = useState(MEDIA_TYPES.BOOK);
 
   const mediaConfig = getMediaConfig(mediaType);
 
@@ -40,6 +40,8 @@ export default function Navbar() {
     const encodeMediaType = encodeURIComponent(mediaType);
     router.push(`/search/results?q=${encodeQuery}&type=${encodeMediaType}`);
 
+    console.log('type:', mediaType);
+
     setSearchQuery('');
   };
 
@@ -52,7 +54,7 @@ export default function Navbar() {
     return (
       <div className="navbar bg-base-100 shadow-md px-4">
         <div className="flex-1">
-          <form onSubmit={{handleSearch}} className='w-full max-w-md'>
+          <form onSubmit={handleSearch} className='w-full max-w-md'>
             <div className='join w-full'>
                 <input
                 type='text'
@@ -64,10 +66,10 @@ export default function Navbar() {
                 <select className='select'
                 value={mediaType}
                 onChange={(e) => setMediaType(e.target.value)}>
-              <option value={MEDIA_TYPES.BOOK}>Book</option>
-              <option value={MEDIA_TYPES.FILM}>Film</option>
-              <option value={MEDIA_TYPES.MUSIC}>Music</option>
-              <option value={MEDIA_TYPES.GAME}>Game</option>
+              <option value={`${MEDIA_TYPES.BOOK}`}>Book</option>
+              <option value={`${MEDIA_TYPES.FILM}`}>Film</option>
+              <option value={`${MEDIA_TYPES.MUSIC}`}>Music</option>
+              <option value={`${MEDIA_TYPES.GAME}`}>Game</option>
                 </select>
                 <button
                 type='submit'
@@ -83,6 +85,5 @@ export default function Navbar() {
           <button onClick={handleLogout} className="btn btn-outline">LogOut</button>
         </div>
         </div>
-       
     )
   }

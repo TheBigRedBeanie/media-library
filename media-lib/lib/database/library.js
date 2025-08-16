@@ -1,5 +1,5 @@
 // functions to get user's whole library, and do CRUD operations will go here
-import supabase from '../supabaseClient'
+import { supabase } from '../supabaseClient'
 
 export default async function getUserLibrary(libraryID) {
     try {

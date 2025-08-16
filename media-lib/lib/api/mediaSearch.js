@@ -46,9 +46,10 @@ export default async function searchMedia(query, mediaType, options = {}) {
                     };
             
                     default:
+                        console.log('mediaType:', mediaType)
                         return {
                             success: false,
-                            error: `unsupported media type: ${mediaType}`
+                            error: `unsupported media type: ${mediaType} is this where the error comes from`
                         };
         }
     } catch (error) {

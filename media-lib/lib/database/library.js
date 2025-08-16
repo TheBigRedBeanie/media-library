@@ -77,7 +77,7 @@ export async function addMediaToLibrary(supabase, userId, mediaData) {
     try { 
         console.log('📝 Starting addMediaToLibrary with:', { title, creator, mediaType, format });
         
-        const validMediaTypes = ['book', 'film', 'music'];
+        const validMediaTypes = ['Book', 'Film', 'Music', 'Game'];
         if (!validMediaTypes.includes(mediaType)) {
             return { success: false, error: `invalid media type: ${mediaType}` };
         }
@@ -116,7 +116,7 @@ export async function addMediaToLibrary(supabase, userId, mediaData) {
             creator: creator.trim(),
             media_type: mediaType,
             release_date: releaseDate,
-            desc: description ? description.trim() : null, // Handle empty description
+            description: description ? description.trim() : null, // Handle empty description
             format: format.trim()
         })
         .select()

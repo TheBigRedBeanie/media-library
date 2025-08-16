@@ -9,7 +9,7 @@ import { deleteMediaFromLibrary } from '@/lib/database/library';
 import { supabase } from '@/lib/supabaseClient';
 
 const FILTERS = ["All", "Books", "Movies", "Music", "Games"];
-const mapFilterToDb = { Books: "book", Movies: "film", Music: "music", Games: "game'"};
+const mapFilterToDb = { Books: "Book", Movies: "Film", Music: "Music", Games: "Game'"}; // the DB columns are now capitalized, which is required for the comparison at the filter level
 
 
 export default function LibraryPage() {
@@ -63,7 +63,7 @@ const confirmDelete = async () => {
     const result = await deleteMediaFromLibrary(supabase, userId, mediaId)
 
     if (result.success) {
-      setItems(prev => prev.filter(item => item.mediaID !== mediaId))
+      setItems(prev => prev.filter(item => item.media_id !== mediaId))
       console.log('sucessfully removed media:', mediaId)
     } else {
       console.error('delete failed:', result.error)

@@ -94,7 +94,7 @@ export default function HomePage() {
     </div>
       </section>
 
-    {/*recenlty Added Section */}
+    {/*recently Added Section */}
     <section>
       <div className="flex justify-between items-center mb-6">
       <h2 className="text-2xl font-semibold"> Recently Added</h2> 

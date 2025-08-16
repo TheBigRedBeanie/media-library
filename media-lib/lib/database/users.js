@@ -1,6 +1,8 @@
+import supabase from '../supabaseClient'
+
 // users and authentication functions may go here
 
-export default async function getUser(supabase, username) {
+export default async function getUser(username) {
     try {
         const {data, error} = await supabase
             .from('users')

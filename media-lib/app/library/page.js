@@ -60,7 +60,7 @@ const confirmDelete = async () => {
   const { mediaId } = deleteConfirmation
 
   try {
-    const result = await deleteMediaFromLibrary(supabase, userId, mediaId)
+    const result = await deleteMediaFromLibrary(userId, mediaId)
 
     if (result.success) {
       setItems(prev => prev.filter(item => item.media_id !== mediaId))

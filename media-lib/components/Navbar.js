@@ -5,7 +5,7 @@ import { supabase } from "../lib/supabaseClient";
 import { useRouter, usePathname } from "next/navigation";
 import { data } from 'autoprefixer';
 
-export default function Navbar() {
+export default function Navbar() {de
   const router = useRouter();
   const pathname = usePathname();
   const [session, setSession] = useState(null);

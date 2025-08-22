@@ -3,9 +3,10 @@ import Link from 'next/link'
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useRouter, usePathname } from "next/navigation";
-import { data } from 'autoprefixer';
+//import { data } from 'autoprefixer';
+//import { loadStaticPaths } from 'next/dist/server/dev/static-paths-worker';
 
-export default function Navbar() {de
+export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const [session, setSession] = useState(null);

@@ -1,14 +1,27 @@
 // functions to get user's whole library, and do CRUD operations will go here
+import { supabase } from "../../lib/supabaseClient";
 
 
-export default async function getUserLibrary(supabase, libraryID) {
+export default async function getUserLibrary(libraryID) {
     try {
         const {data, error} = await supabase
         .from('library')
-        .select('library_id, media_id, media_type, date_added')
+        .select(`library_id,
+             media_id, 
+             media_type, 
+             date_added,
+             media:media_id(
+             title,
+             creator,
+             media_type,
+             release_date,
+             format,
+             description
+             )
+             `)
         .eq('library_id',libraryID)
 
-        console.log('libraryID', data)
+        console.log('Data from the join', data)
 
         if (error) {
             console.error('error fetching library', error);
@@ -19,7 +32,13 @@ export default async function getUserLibrary(supabase, libraryID) {
             libraryID: library.library_id,
             mediaID: library.media_id,
             mediaType: library.media_type,
+            title:library.media.title,
+            creator:library.media.creator,
+            releaseDate:library.media.release_date,
+            format:library.media.format,
+            description:library.media.description,
             DateAdded: library.date_added
+            
         }));
 
     return {success: true, library}

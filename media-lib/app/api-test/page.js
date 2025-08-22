@@ -1,19 +1,26 @@
+// utilized Kagi's Code Assistant to assist with developing the following API integration with openLibrary's Search API : https://openlibrary.org/dev/docs/api/search
+
 'use client';
 import { useState } from 'react';
-import SearchBooks, {searchBooksByTitle, searchBooksByAuthor, searchBooksByISBN } from '@/lib/api/bookSearch';
+import searchBooks, {
+    searchBooksByTitle,
+    searchBooksByAuthor,
+    searchBooksByISBN
+} from '@/lib/api/bookSearch'
 
 export default function ApiTestPage() {
     const [query, setQuery] = useState('');
-    const [searchType, setSearchType] = useState('general'); // general, title, author, isbn
+    const [searchType, setSearchType] = useState('general');
     const [results, setResults] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
     const handleSearch = async (e) => {
         e.preventDefault();
-        
-        if (!query.trim()) {
+        const trimmed = query.trim();
+        if (!trimmed) {
             setError('Please enter a search query');
+            setResults(null);
             return;
         }
 
@@ -22,192 +29,118 @@ export default function ApiTestPage() {
         setResults(null);
 
         try {
-            let searchResult;
-            
+            let res;
             switch (searchType) {
                 case 'title':
-                    searchResult = await searchBooksByTitle(query);
+                    res = await searchBooksByTitle(trimmed);
                     break;
                 case 'author':
-                    searchResult = await searchBooksByAuthor(query);
+                    res = await searchBooksByAuthor(trimmed);
                     break;
                 case 'isbn':
-                    searchResult = await searchBooksByISBN(query);
+                    res = await searchBooksByISBN(trimmed);
                     break;
                 default:
-                    searchResult = await SearchBooks(query);
+                    res = await searchBooks(trimmed);
             }
 
-            if (searchResult.success) {
-                setResults(searchResult.data);
-                console.log('Search results:', searchResult.data);
-            } else {
-                setError(searchResult.error);
-            }
+            if (res.success) setResults(res.data);
+            else setError(res.error);
         } catch (err) {
-            console.error('Search error:', err);
-            setError('An unexpected error occurred');
+            setError('an unexpected error occurred'. err.message)
         } finally {
             setLoading(false);
         }
     };
 
     const handleBookSelect = (book) => {
-        console.log('Selected book:', book);
-        // Here you could add the book to your library, show details, etc.
         alert(`Selected: ${book.title} by ${book.authors.join(', ')}`);
     };
 
     return (
-        <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto' }}>
-            <h1>📚 Book Search API Test</h1>
-            
-            {/* Search Form */}
-            <form onSubmit={handleSearch} style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+        <div className='p-6 max-w-5xl mx-auto'>
+            <h1 className='text-3xl font-bold mb-6'>Book Search API Test</h1>
+
+            <form onSubmit={handleSearch} className='mb-6'>
+                <div className='flex gap-3 mb-4'>
                     <input
-                        type="text"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Search for books..."
-                        style={{
-                            flex: 1,
-                            padding: '10px',
-                            border: '1px solid #ccc',
-                            borderRadius: '4px'
-                        }}
+                    type='text'
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder='search for books..'
+                    className='input input-bordered w-full max-w-md'
                     />
                     <select
-                        value={searchType}
-                        onChange={(e) => setSearchType(e.target.value)}
-                        style={{
-                            padding: '10px',
-                            border: '1px solid #ccc',
-                            borderRadius: '4px'
-                        }}
+                    value={searchType}
+                    onChange={(e) => setSearchType(e.target.value)}
+                    className='select select-bordered'
                     >
-                        <option value="general">General Search</option>
-                        <option value="title">By Title</option>
-                        <option value="author">By Author</option>
-                        <option value="isbn">By ISBN</option>
+                        <option value='general'>General Search</option>
+                        <option value='title'>By Title</option>
+                        <option value='author'>By Author</option>
+                        <option value='isbn'>By ISBN</option>
                     </select>
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        style={{
-                            padding: '10px 20px',
-                            backgroundColor: loading ? '#ccc' : '#007bff',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: loading ? 'not-allowed' : 'pointer'
-                        }}
-                    >
+                    <button type='submit' disabled={loading} className='btn btn-primary'>
                         {loading ? 'Searching...' : 'Search'}
                     </button>
                 </div>
             </form>
 
-            {/* Error Display */}
             {error && (
-                <div style={{
-                    color: 'red',
-                    backgroundColor: '#ffe6e6',
-                    padding: '10px',
-                    borderRadius: '4px',
-                    marginBottom: '20px'
-                }}>
-                    Error: {error}
-                </div>
+                <div className='alert alert-error mb-6'>
+                    <span>{error}</span>
+                    </div>
             )}
 
-            {/* Results Display */}
             {results && (
                 <div>
-                    <h2>
-                        📖 Search Results ({results.totalResults} total results for "{results.query}")
+                    <h2 className='text-2xl font-semibold mb-4'>
+                        Search results ({results.totalResults} total for '{results.query}')
                     </h2>
-                    
+
                     {results.books.length === 0 ? (
-                        <p>No books found. Try a different search term.</p>
-                    ) : (
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                            gap: '20px'
-                        }}>
-                            {results.books.map((book, index) => (
-                                <div
-                                    key={book.key || index}
-                                    style={{
-                                        border: '1px solid #ddd',
-                                        borderRadius: '8px',
-                                        padding: '15px',
-                                        backgroundColor: '#f9f9f9'
-                                    }}
-                                >
-                                    <div style={{ display: 'flex', gap: '15px' }}>
-                                        {/* Book Cover */}
+                        <div className='alert alert-info'>
+                            <span>No books found. Try a different term.</span>
+                            </div>
+                    ): (
+                        <div className='gird grid-cols-1 md:grid-cols-2 lg:gid-cols-3 gap-6'>
+                            {results.books.map((book, idx) => (
+                                <div key={book.key ?? idx} 
+                                className='card card-compact bg-base-100 shadow-xl'>
+                                    <figure className='px-4 pt-4'>
                                         {book.coverUrl ? (
                                             <img
-                                                src={book.coverUrl}
-                                                alt={`Cover of ${book.title}`}
-                                                style={{
-                                                    width: '60px',
-                                                    height: '90px',
-                                                    objectFit: 'cover',
-                                                    borderRadius: '4px'
-                                                }}
+                                            src={book.coverUrl}
+                                            alt={`cover of ${book.title}`}
+                                            className='object-cover w-24 h-36 rounded'
                                             />
                                         ) : (
-                                            <div style={{
-                                                width: '60px',
-                                                height: '90px',
-                                                backgroundColor: '#ddd',
-                                                borderRadius: '4px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                fontSize: '12px',
-                                                color: '#666'
-                                            }}>
-                                                No Cover
+                                            <div className='w-24 h-36 bg-neutral text-neautral-content flex items-cner justify-center rounded'>
+                                                <span className='text-xs'>No Cover</span>
                                             </div>
                                         )}
-
-                                        {/* Book Details */}
-                                        <div style={{ flex: 1 }}>
-                                            <h3 style={{ margin: '0 0 5px 0', fontSize: '16px' }}>
-                                                {book.title}
-                                            </h3>
-                                            <p style={{ margin: '0 0 5px 0', color: '#666' }}>
-                                                <strong>Author(s):</strong> {book.authors.join(', ')}
+                                    </figure>
+                                    <div className='card-body'>
+                                        <h3 className='card-title text-base'>{book.title}</h3>
+                                        <p className='text-sm'>
+                                            <strong>Author(s):</strong> {book.authors.join(' ')}
+                                        </p>
+                                        {book.firstPublishYear && (
+                                            <p className='text-xs'>
+                                                <strong>First Published:</strong> {book.firstPublishYear}
                                             </p>
-                                            {book.firstPublishYear && (
-                                                <p style={{ margin: '0 0 5px 0', color: '#666' }}>
-                                                    <strong>First Published:</strong> {book.firstPublishYear}
-                                                </p>
-                                            )}
-                                            {book.isbn && (
-                                                <p style={{ margin: '0 0 5px 0', color: '#666', fontSize: '12px' }}>
-                                                    <strong>ISBN:</strong> {book.isbn}
-                                                </p>
-                                            )}
-                                            
+                                        )}
+                                        {book.isbn && (
+                                            <p className='text-xs'>
+                                                <strong>ISBN:</strong> {book.isbn}
+                                            </p>
+                                        )}
+                                        <div className='card-actions justify-end'>
                                             <button
-                                                onClick={() => handleBookSelect(book)}
-                                                style={{
-                                                    marginTop: '10px',
-                                                    padding: '5px 15px',
-                                                    backgroundColor: '#28a745',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '4px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '12px'
-                                                }}
+                                            onClick={() => handleBookSelect(book)}
+                                            className='btn btn-success btn-sm'
                                             >
-                                                Select This Book
+                                                Select
                                             </button>
                                         </div>
                                     </div>
@@ -215,14 +148,12 @@ export default function ApiTestPage() {
                             ))}
                         </div>
                     )}
-
-                    {/* Pagination Info */}
-                    <div style={{ marginTop: '20px', textAlign: 'center', color: '#666' }}>
-                        Showing {results.books.length} of {results.totalResults} results
-                        {results.hasMore && ' (more results available)'}
-                    </div>
+                <div className='mt-6 text-center text-sm text-neutral'>
+                    Showing {results.books.length} of {results.totalResults}
+                    {results.hasMore && ' (more available)'}
                 </div>
-            )}
+            </div>
+        )}
         </div>
     );
 }

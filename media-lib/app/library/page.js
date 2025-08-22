@@ -5,12 +5,12 @@ import { supabase } from "../../lib/supabaseClient";
 import MediaCard from '@/components/MediaCard';
 import { useAuth } from "../../lib/context/AuthContext";
 import { useRouter } from "next/navigation";
-import getUserLibrary from "../../lib/database/library";
+import getUserLibrary, { deleteMediaFromLibrary } from "../../lib/database/library";
 
 
+const TYPES = ["All", "Books", "Movies", "Music", "Games"]; // changed to TYPES instead of FILTERS to complete merge
+const mapFilterToDb = { Books: "Book", Movies: "Film", Music: "Music", Games: "Game'"}; // the DB columns are now capitalized, which is required for the comparison at the filter level
 
-
-const TYPES = ["All", "Book", "Movie", "Song", "Game", "Series"];
 
 
 export default function LibraryPage() {
@@ -22,7 +22,9 @@ export default function LibraryPage() {
   const [filter, setFilter] = useState("All");
   const [view, setView] = useState("grid");
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState('');
   const [errorMessage,setErrorMessage] = useState("")
+  const [deleteConfirmation, setDeleteConfirmation] = useState({ show: false, mediaId: null, title: ''})
 
 
   useEffect(() => {
@@ -30,8 +32,21 @@ export default function LibraryPage() {
       // not logged in → send to /
       router.replace("/");
     }
+    setUserId(session.user.id);
+    console.log('user id'; userId);
   }, [session, router]);
 
+
+
+  
+  // Require auth
+  /*useEffect(() => {
+    if (!session) {router.push("/")};
+    setUserId(session.user.id);
+  }, [session, router]);
+
+  console.log('user id', userId);
+  */
 
   // Load items for this user
   useEffect(() => {
@@ -59,6 +74,36 @@ export default function LibraryPage() {
 
 
   // ...render your filter buttons + grid/list using `filtered`
+  
+// function for loading the delete modal to the user 
+const showDeleteConfirmation = (mediaId, title) => {
+  setDeleteConfirmation({ show: true, mediaId, title })
+}
+
+const confirmDelete = async () => {
+  const { mediaId } = deleteConfirmation
+
+  try {
+    const result = await deleteMediaFromLibrary(userId, mediaId)
+
+    if (result.success) {
+      setItems(prev => prev.filter(item => item.media_id !== mediaId))
+      console.log('sucessfully removed media:', mediaId)
+    } else {
+      console.error('delete failed:', result.error)
+    }
+  } catch (error) {
+    console.error('error:', error)
+  }
+
+  setDeleteConfirmation({ show: false, mediaId: null, title: ''})
+}
+
+const cancelDelete = () => {
+  setDeleteConfirmation({ show: false, mediaId: null, title: ''})
+}
+
+
   return (
     <div className="space-y-10">
         {/* Controls row */}
@@ -118,7 +163,10 @@ export default function LibraryPage() {
               key={i}
               title={item.title}
               type={item.media_type}
-              image={"https://placehold.co/300x200"}
+              image={`/logos/${item.media_type}.logo.png`}
+              mediaId={item.media_id}
+              showDelete={true}
+              onDelete={showDeleteConfirmation}
             />
           ))}
         </div>
@@ -130,9 +178,7 @@ export default function LibraryPage() {
       ): (
         <div className="overflow-x-auto">
           <table className="table w-full">
-            <thead>
-              <tr><th>Title</th><th>Type</th><th>Added</th></tr>
-            </thead>
+            <thead><tr><th>Title</th><th>Creator</th><th>Type</th><th>Added</th><th>Remove</th></tr></thead>
             <tbody>
             {filter === "All"?
             items.map((item,i) => (
@@ -146,14 +192,38 @@ export default function LibraryPage() {
              items.filter(i => i.mediaType === filter).map((item,i) => (
                 <tr key={item.media_id}>
                   <td>{item.title}</td>
+                  <td>{item.creator}</td>
                   <td>{item.media_type}</td>
-                  <td>{new Date(item.date_added || item.created_at).toLocaleDateString()}</td>
+                  <td>{new Date(item.created_at || item.date_added).toLocaleDateString()}</td>
+                  <td><button 
+                  className='btn btn-sm border-warning'
+                  onClick={() => showDeleteConfirmation(item.media_id, item.title)}
+                  >X</button></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+{deleteConfirmation.show && (
+      <div className="modal modal-open">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">Confirm Removal</h3>
+          <p className="py-4">
+            Are you sure you want to remove "{deleteConfirmation.title}" from your library?
+          </p>
+          <div className="modal-action">
+            <button className="btn btn-ghost" onClick={cancelDelete}>
+              Cancel
+            </button>
+            <button className="btn btn-error" onClick={confirmDelete}>
+              Remove
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 }

@@ -39,7 +39,7 @@ export default function DatabaseTest() {
 
     try {
 
-      const result = await getUser(supabase, username);
+      const result = await getUser(username);
 
       if (result.success) {
       const userId = result.user[0].userID;
@@ -66,7 +66,7 @@ export default function DatabaseTest() {
     console.log('getting user library');
 
     try {
-      const result = await getUserLibrary(supabase, libraryID);
+      const result = await getUserLibrary(libraryID);
 
       if (result.success && result.library) {
         setLibraryData(result.library)
@@ -94,7 +94,7 @@ export default function DatabaseTest() {
     console.log('getting user media');
 
     try { 
-      const result = await getUserMedia(supabase, libraryData);
+      const result = await getUserMedia(libraryData);
 
       if (result.success) {
         setMediaData(result.media)
@@ -142,7 +142,7 @@ const testAddMediaToLibrary = async (e) => {
   }
 
     try {
-      const result = await addMediaToLibrary(supabase, userIdNum, formData);
+      const result = await addMediaToLibrary(userIdNum, formData);
       console.log('add media result', result);
       
       if (result.success) {
@@ -188,7 +188,7 @@ const testAddMediaToLibrary = async (e) => {
     console.log('deleting media:', mediaIdNum)
 
     try {
-      const result = await deleteMediaFromLibrary(supabase, userIdNum, mediaIdNum)
+      const result = await deleteMediaFromLibrary(userIdNum, mediaIdNum)
       console.log('page message: deleting media id:', mediaIdNum)
       if (result.success) {
         console.log('media deleted!', mediaIdNum)

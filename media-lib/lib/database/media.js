@@ -1,4 +1,6 @@
-export default async function getUserMedia(supabase, libraryData) {
+import { supabase } from '../supabaseClient'
+
+export default async function getUserMedia(libraryData) {
 
 //in theory, libraryData will be an array of media_id from the library table captured in a previous function
 

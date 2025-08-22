@@ -1,7 +1,6 @@
 // functions to get user's whole library, and do CRUD operations will go here
 import { supabase } from "../../lib/supabaseClient";
 
-
 export default async function getUserLibrary(libraryID) {
     try {
         const {data, error} = await supabase
@@ -51,7 +50,7 @@ export default async function getUserLibrary(libraryID) {
 
 // checking for duplicates before adding media to DB
 
-export async function checkForDuplicates(supabase, mediaType, title, format, creator) {
+export async function checkForDuplicates(title, format, creator) {
     try {
         console.log('🔍 Searching for duplicates:', { title: title.trim(), creator: creator.trim(), format: format.trim() });
         
@@ -90,13 +89,13 @@ export async function checkForDuplicates(supabase, mediaType, title, format, cre
     }
 }
 
-export async function addMediaToLibrary(supabase, userId, mediaData) {
+export async function addMediaToLibrary(userId, mediaData) {
     const { title, creator, mediaType, releaseDate, description, format } = mediaData;
 
     try { 
         console.log('📝 Starting addMediaToLibrary with:', { title, creator, mediaType, format });
         
-        const validMediaTypes = ['book', 'film', 'music'];
+        const validMediaTypes = ['Book', 'Film', 'Music', 'Game'];
         if (!validMediaTypes.includes(mediaType)) {
             return { success: false, error: `invalid media type: ${mediaType}` };
         }
@@ -104,7 +103,7 @@ export async function addMediaToLibrary(supabase, userId, mediaData) {
         console.log('✅ Media type validation passed');
         
         console.log('🔄 About to call checkForDuplicates...');
-        const duplicateCheck = await checkForDuplicates(supabase, mediaType, title, format, creator);
+        const duplicateCheck = await checkForDuplicates(mediaType, title, format, creator);
         
         console.log('🔍 Duplicate check result:', duplicateCheck);
 
@@ -135,7 +134,7 @@ export async function addMediaToLibrary(supabase, userId, mediaData) {
             creator: creator.trim(),
             media_type: mediaType,
             release_date: releaseDate,
-            desc: description ? description.trim() : null, // Handle empty description
+            description: description ? description.trim() : null, // Handle empty description
             format: format.trim()
         })
         .select()
@@ -186,7 +185,7 @@ export async function addMediaToLibrary(supabase, userId, mediaData) {
 }
 
 
-export async function deleteMediaFromLibrary(supabase, userId, mediaId) {
+export async function deleteMediaFromLibrary(userId, mediaId) {
     try {
         const {data, error} = await supabase 
         .from('library')

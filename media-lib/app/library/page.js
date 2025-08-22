@@ -33,7 +33,7 @@ export default function LibraryPage() {
       router.replace("/");
     }
     setUserId(session.user.id);
-    console.log('user id'; userId);
+    console.log('user id', userId);
   }, [session, router]);
 
 

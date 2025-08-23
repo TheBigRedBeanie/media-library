@@ -14,8 +14,10 @@ const mapFilterToDb = {
     Books: 'Book',
     Movies: 'Film',
     Music: 'Music',
-    Games: "Game'",
+    Games: 'Game'
 }; // the DB columns are now capitalized, which is required for the comparison at the filter level
+
+
 
 export default function LibraryPage() {
     const { session } = useAuth();
@@ -92,7 +94,7 @@ export default function LibraryPage() {
 
             if (result.success) {
                 setItems((prev) =>
-                    prev.filter((item) => item.media_id !== mediaId)
+                    prev.filter((item) => item.mediaId !== mediaId)
                 );
                 console.log('sucessfully removed media:', mediaId);
             } else {
@@ -108,6 +110,15 @@ export default function LibraryPage() {
     const cancelDelete = () => {
         setDeleteConfirmation({ show: false, mediaId: null, title: '' });
     };
+
+
+    // filter logic 
+    const filteredItems = useMemo(() => {
+      if (filter === 'All') return items;
+      const dbType = mapFilterToDb[filter];
+      return items.filter(item => item.mediaType === dbType);
+  }, [items, filter]);
+
 
     return (
         <div className="space-y-10">
@@ -161,31 +172,17 @@ export default function LibraryPage() {
                 </div>
             ) : view === 'grid' ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    {filter === 'All'
-                        ? items.map((item, i) => (
+                    {filteredItems.map((item, i) => (
                               <MediaCard
                                   key={i}
                                   title={item.title}
-                                  type={item.media_type}
-                                  image={`/logos/${item.media_type}.logo.png`}
-                                  mediaId={item.media_id}
+                                  type={item.mediaType}
+                                  image={`/logos/${item.mediaType}.logo.png`}
+                                  mediaId={item.mediaId}
                                   showDelete={true}
                                   onDelete={showDeleteConfirmation}
                               />
-                          ))
-                        : items
-                              .filter((i) => i.mediaType === filter)
-                              .map((item, i) => (
-                                  <MediaCard
-                                      key={i}
-                                      title={item.title}
-                                      type={item.media_type}
-                                      image={`/logos/${item.media_type}.logo.png`}
-                                      mediaId={item.media_id}
-                                      showDelete={true}
-                                      onDelete={showDeleteConfirmation}
-                                  />
-                              ))}
+                          ))}
                 </div>
             ) : errorMessage ? (
                 <div>{errorMessage}</div>
@@ -202,16 +199,15 @@ export default function LibraryPage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filter === 'All'
-                                ? items.map((item, i) => (
+                            {filteredItems.map((item, i) => (
                                       <tr
                                           key={
                                               item.library_id ||
-                                              `${item.media_id}-${i}`
+                                              `${item.mediaId}-${i}`
                                           }
                                       >
                                           <td>{item.title}</td>
-                                          <td>{item.media_type}</td>
+                                          <td>{item.mediaType}</td>
                                           <td>
                                               {new Date(
                                                   item.date_added ||
@@ -219,35 +215,7 @@ export default function LibraryPage() {
                                               ).toLocaleDateString()}
                                           </td>
                                       </tr>
-                                  ))
-                                : items
-                                      .filter((i) => i.mediaType === filter)
-                                      .map((item, i) => (
-                                          <tr key={item.media_id}>
-                                              <td>{item.title}</td>
-                                              <td>{item.creator}</td>
-                                              <td>{item.media_type}</td>
-                                              <td>
-                                                  {new Date(
-                                                      item.created_at ||
-                                                          item.date_added
-                                                  ).toLocaleDateString()}
-                                              </td>
-                                              <td>
-                                                  <button
-                                                      className="btn btn-sm border-warning"
-                                                      onClick={() =>
-                                                          showDeleteConfirmation(
-                                                              item.media_id,
-                                                              item.title
-                                                          )
-                                                      }
-                                                  >
-                                                      X
-                                                  </button>
-                                              </td>
-                                          </tr>
-                                      ))}
+                                  ))}
                         </tbody>
                     </table>
                 </div>

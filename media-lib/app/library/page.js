@@ -38,20 +38,20 @@ export default function LibraryPage() {
     useEffect(() => {
         if (session === null) {
             // not logged in → send to /
-            router.replace('/');
-        }
-        setUserId(session.user.id);
+            router.push('/');
+        } else {setUserId(session.user.id)};
         console.log('user id', userId);
     }, [session, router]);
 
     // Require auth
-    /*useEffect(() => {
-    if (!session) {router.push("/")};
-    setUserId(session.user.id);
-  }, [session, router]);
+  //   useEffect(() => {
+  //   if (!session) {router.push("/")
+
+  //   } else {setUserId(session.user.id)};
+  // }, [session, router]);
 
   console.log('user id', userId);
-  */
+  
 
     // Load items for this user
     useEffect(() => {

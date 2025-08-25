@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useRouter, usePathname } from "next/navigation";
+//import { data } from 'autoprefixer';
+//import { loadStaticPaths } from 'next/dist/server/dev/static-paths-worker';
 import { MEDIA_TYPES, getMediaConfig } from '../lib/api/mediaSearch'
 
 export default function Navbar() {
@@ -16,12 +18,22 @@ export default function Navbar() {
 
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    let mounted = true;
+
+    supabase.auth.getSession().then(({data}) => {
+      if (!mounted) return;
+      setSession(data.session);
+
+    });
+
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
       setSession(sess);
     });
-    return () => sub.subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted=false;
+      sub?.subscription?.unsubscribe?.();
+  };
+},[]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -81,9 +93,28 @@ export default function Navbar() {
           </form>
         </div> 
         <div className="flex-none gap-2">
-          <Link href = "/create" className="btn btn-primary"> + Add Media</Link>
-          <button onClick={handleLogout} className="btn btn-outline">LogOut</button>
+          {session ? (
+          <>
+          <Link href = "/create" className="btn btn-primary"> 
+          + Add Media
+          </Link>
+
+          <button onClick={handleLogout} className="btn btn-outline">
+            LogOut
+          </button>
+          </>
+        ) : (
+          <>
+            <Link href="/login" className="btn btn-primary">
+              Login
+            </Link>
+            <Link href="/signup" className="btn btn-outline">
+              Sign up
+            </Link>
+          </>
+        )}
         </div>
-        </div>
+      </div>
+       
     )
   }

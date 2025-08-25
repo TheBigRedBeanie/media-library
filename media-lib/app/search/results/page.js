@@ -30,9 +30,9 @@ export default function SearchResultsPage() {
     useEffect(() => {
         if (!session) {router.push("/")};
         setUserId(session.user.id);
-      }, [session, router]);
+    }, [session, router]);
     
-      console.log('user id', userId);
+    console.log('user id', userId);
 
     const performSearch = async (searchQuery, page = 1, type = MEDIA_TYPES.BOOK) => {
         if (!searchQuery.trim()) return;
